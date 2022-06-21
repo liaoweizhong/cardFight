@@ -1,0 +1,21 @@
+.cardBox {
+    width: 150px;
+    height: 210px;
+    transition: all 0.25s;
+}
+
+.cardBox .cardbg {
+    background: #eeeeee;
+    height: 100%;
+}
+
+.cardBox .cardImage {
+    height: 100%;
+}
+
+.shoupaiBox {
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translate(-50%, -100%);
+}

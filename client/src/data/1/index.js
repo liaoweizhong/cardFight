@@ -4,7 +4,8 @@ class Chaoliumeihai extends Card {
 
         super();
 
-        this.images = "";
+        this.id = "";
+        this.images = "./data/"+this.id+"/image.png";
 
     }
 
