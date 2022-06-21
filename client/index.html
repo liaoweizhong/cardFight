@@ -3,13 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <title>卡牌战斗</title>
+	<script src="./player/player.js"></script>
 	<script src="./data/card.js"></script>
-	<script src="./data/1.js"></script>
+	<script src="./data/1/index.js"></script>
+	
     <!-- <link type="text/css" rel="stylesheet" href="css/style.css"/> -->
     <!-- <script type="text/javascript" src="js/script.js"></script> -->
 </head>
 <body>
     <div id='app'></div>
+
+	<!-- shoupai -->
+	<div class="shoupai"></div>
 </body>
 <script type="text/javascript"> 
 	// 打开一个 web socket，设定websocket服务器地址和端口
@@ -18,8 +23,11 @@
 	//开启连接open后客户端处理方法
 	ws.onopen = function()
 	{
-	  // Web Socket 已连接上，在页面中显示消息
-	//   document.getElementById('res').innerHTML="当前客户端已经连接到websocket服务器";
+	  	// Web Socket 已连接上，在页面中显示消息
+		//   document.getElementById('res').innerHTML="当前客户端已经连接到websocket服务器";
+
+		// 加入房间
+		player.inRoom();
 	   
 	};
 	// // 点击按钮时给websocket服务器端发送消息
@@ -30,7 +38,12 @@
 	// 接收消息后客户端处理方法
 	ws.onmessage = function (evt) 
 	{ 
-	  console.log(evt.data);
+	  	console.log(evt.data);
+
+		const data = JSON.parse(evt.data)
+
+		// 判断一下是否有code记录
+		ws.messageQueue[data.to](data);
 	//   $('#res').text(evt.data);
 	};
 	
@@ -40,6 +53,25 @@
 	  // 关闭 websocket
 	  alert("连接已关闭..."); 
 	};
+
+	ws.messageQueue = [];
+
+	ws.sendJson = function(json){
+		return new Promise((resovle)=>{
+			// 生成唯一识别码
+			const code = new Date()*1 +"_"+ Math.random().toString().replace("0.","");
+			ws.messageQueue[code] = resovle;
+			json.mesCode = code;
+			this.send(JSON.stringify(json));
+		})
+	}
+
+
+	// 创建用户
+	const player = new Player();
+
+	player.setWs(ws);
+	
 
 </script>
 </html>

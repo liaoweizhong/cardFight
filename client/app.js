@@ -15,7 +15,7 @@ app.all('*', function ( req , res, next ) {
 });
 
 // 支持静态访问路径
-app.use(express.static(__dirname.split("src")[0]+"src"));
+app.use(express.static(__dirname.split("src")[0]+"/src"));
 
 // 配置body-parser模块
 app.use(bodyParser.urlencoded({limit: '500mb', extended: false }));
@@ -34,5 +34,5 @@ app.get("/",function(req,res){
 });
 
  console.log("---------------------------")
- console.log("成功开启服务器：")
+ console.log("成功开启服务器：8000")
  console.log("---------------------------")

@@ -28,7 +28,7 @@ export class Room {
         // 创建通信频道
         // this.ws = this.createRoomWebSocket()
         // 生成唯一code
-        this.code = "test-1234" || uuidv4();
+        this.code = "test" || uuidv4();
 
         // this.sendBasicInUser()
     }
@@ -56,21 +56,23 @@ export class Room {
         const roomuser = this.createRoomUser(webSocket, json)
         // 添加到用户管理
         this.users.push(roomuser);
+        // 告诉用户已经进入房间
+        roomuser.send({ message: "已经加入成功", to: json.mesCode });
     }
 
     // 为房间内所有人发送基本信息
-    sendAllUserBasicIn (){
-        this.users.forEach((user)=>{
-            // user.send(this.getBasicInformation());
-            this.sendUserBasicInfo(user.id);
-        })
-    }
+    // sendAllUserBasicIn (){
+    //     this.users.forEach((user)=>{
+    //         // user.send(this.getBasicInformation());
+    //         this.sendUserBasicInfo(user.id, {});
+    //     })
+    // }
 
-    sendUserBasicInfo (userId: string){
+    sendUserBasicInfo (userId: string, json: any){
         // 首先获取当前用户
         const user = this.getUserById(userId);
         if( user ){
-            user.send(this.getBasicInformation());
+            user.send({data:this.getBasicInformation(), to: json.mesCode});
         }
     }
 
@@ -122,7 +124,7 @@ export class RoomUser {
     send (sendString: string | Object){
         if (this.WebSocket.readyState == 1) {
             const sendText = typeof sendString === "string" ? sendString : JSON.stringify(sendString);
-            console.log(sendText);
+            console.log("sendText",sendText);
             this.WebSocket.send(sendText);
         }
     }
@@ -153,13 +155,13 @@ export class RoomWebSocket {
 
             websocket.on("message",(data: RawData)=>{
                 // debugger;
-                console.log("收到有用的信息", data);
                 console.log("将收到的信息toString", data.toString());
                 console.log("将收到的信息类型", typeof data.toString());
                 
 
                 const dataString = JSON.parse(data.toString());
 
+                console.log("将收到的信息请求", dataString.type);
                 switch ( dataString.type ){
                     // 创建房间
                     case "createRoom": this.createUser(); break;
@@ -183,7 +185,7 @@ export class RoomWebSocket {
         const room = this.getRoomById(dataJson.roomId)
         if( room ){
             // 那个用户需要当前房间基本信息
-            room.sendUserBasicInfo(dataJson.userId);
+            room.sendUserBasicInfo(dataJson.userId, dataJson);
         }
     }
 
@@ -222,9 +224,9 @@ export class RoomWebSocket {
         const room = this.createRoom();
 
         // 将卡牌预加载进入房间中
-        room.setCards(["1","1","1","1","1"], "1");
+        room.setCards(["1","1","1","1","1","1","1","1","1","1","1","1","1","1","1","1","1","1","1","1"], "1");
 
-        room.setCards(["1","1","1","1","1"], "2");
+        room.setCards(["1","1","1","1","1","1","1","1","1","1","1","1","1","1","1","1","1","1","1","1"], "2");
     }
 
 }
