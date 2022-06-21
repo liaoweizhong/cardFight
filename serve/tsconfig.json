@@ -1,0 +1,18 @@
+{
+  "compilerOptions": {
+      "target": "es2018",
+      "module": "commonjs",
+      // "module": "system",
+      // "module": "esnext",
+      "types": ["node"],
+      "outDir": "./dist/",
+      "rootDir": "./",
+      "strict": true,
+      "moduleResolution": "node",
+      "esModuleInterop": true,
+      "experimentalDecorators": true,
+  },
+  "exclude": ["./test"],
+  "include": [ "app.ts" ],
+  // "include": [ "test.ts" ],
+}
