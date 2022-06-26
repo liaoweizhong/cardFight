@@ -1,7 +1,7 @@
 /**
  * 测试人物
  */
-
+import { v4 as uuidv4 } from 'uuid';
 import { RoomUser } from "../serveroom/room";
 import { DataValue } from "./util/util1"
 
@@ -10,6 +10,8 @@ export class Card {
     public static id: string = '1';
 
     public id: string = '1';
+
+    public code: String = uuidv4();
 
     public userId: string;
 

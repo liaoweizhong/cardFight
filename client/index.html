@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <title>卡牌战斗</title>
-	<link href="./shoupai/shoupai.css" />
+	<script src="./caipan/caipan.js"></script>
+	<link rel="stylesheet" href="./shoupai/shoupai.css" />
 	<script src="./shoupai/shoupai.js"></script>
 	<script src="./player/player.js"></script>
 	<script src="./data/card.js"></script>
@@ -16,64 +17,35 @@
     <div id='app'></div>
 
 	<!-- shoupai -->
-	<div class="shoupai"></div>
+	<div class="shoupai" id="sp"></div>
 </body>
 <script type="text/javascript"> 
-	// 打开一个 web socket，设定websocket服务器地址和端口
-	var ws = new WebSocket("ws://127.0.0.1:2333");
 
-	//开启连接open后客户端处理方法
-	ws.onopen = function()
-	{
-	  	// Web Socket 已连接上，在页面中显示消息
-		//   document.getElementById('res').innerHTML="当前客户端已经连接到websocket服务器";
-
-		// 加入房间
-		player.inRoom();
-	   
-	};
-	// // 点击按钮时给websocket服务器端发送消息
-	// $('#btn').click(function(){
-	// 	var value = $('#demo').val();
-	// 	ws.send(value);
-	// })
-	// 接收消息后客户端处理方法
-	ws.onmessage = function (evt) 
-	{ 
-	  	console.log(evt.data);
-
-		const data = JSON.parse(evt.data)
-
-		// 判断一下是否有code记录
-		ws.messageQueue[data.to](data);
-	//   $('#res').text(evt.data);
-	};
+	// 获取当前连接的用户id
+	location.params = {};
+	location.search.replace(/^\?/g,"").split("&").forEach((e)=>{ location.params[e.split("=")[0]]=e.split("=")[1];  })
+	const id = location.params.userId;
 	
-	// 关闭websocket
-	ws.onclose = function()
-	{ 
-	  // 关闭 websocket
-	  alert("连接已关闭..."); 
-	};
-
-	ws.messageQueue = [];
-
-	ws.sendJson = function(json){
-		return new Promise((resovle)=>{
-			// 生成唯一识别码
-			const code = new Date()*1 +"_"+ Math.random().toString().replace("0.","");
-			ws.messageQueue[code] = resovle;
-			json.mesCode = code;
-			this.send(JSON.stringify(json));
-		})
-	}
-
+	// 创建裁判
+	const caipan = new Caipan();
 
 	// 创建用户
-	const player = new Player();
+	const player = new Player({ userId: id });
 
-	player.setWs(ws);
-	
+	// 添加进入裁判
+	caipan.addPlayer(player);
+
+	// 手牌管理对象
+	const shoupai = new Shoupai(document.getElementById("sp"));
+
+	player.setShoupai(shoupai)
+
+	// 裁判准备完毕之后执行的
+	caipan.onload().then(()=>{
+
+		caipan.init();
+
+	})
 
 </script>
 </html>

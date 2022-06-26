@@ -2,7 +2,7 @@
 class Card {
 
     constructor (){
-        this.maps.push(this);
+        // this.maps.push(this);
     }
     
     static maps = [];
