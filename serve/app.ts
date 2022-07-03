@@ -1,12 +1,14 @@
 import { expressAnnotation , expressServer } from "./express/express"
 
-import { RoomWebSocket } from "./serveroom/room"
+import { RoomWebSocket } from "./webSocket/ws"
+
+import { load } from "./card/Room";
 
 @expressAnnotation
 export class server extends expressServer {
 
     // 服务端口
-    public port: String = "8881"
+    public port: String = "8882"
 
     public listenBefore (app: any){
         
@@ -16,9 +18,8 @@ export class server extends expressServer {
         // 创建战斗房间管理
         const roomServer = new RoomWebSocket();
 
-
-        // 测试流程
-        roomServer.testProcess()
+        // 加载卡牌战斗房间系统
+        load();
 
     }
 
