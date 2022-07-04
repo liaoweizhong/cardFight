@@ -7,6 +7,8 @@ export default {
 
     get (id: string){
         return this.Objects.find((card)=>{ return card.id == id });
-    }
+    },
 
 }
+
+

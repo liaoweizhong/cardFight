@@ -24,6 +24,9 @@ export class Room {
 
     public cards: Array<Card> = [];
 
+    // 当前行动的用户id
+    public activeUserId: string = "";
+
     constructor (){
         // 创建通信频道
         // this.ws = this.createRoomWebSocket()
@@ -38,6 +41,9 @@ export class Room {
 
         // 双方开始进入手牌抽卡流程
         this.userGetHeaderCards()
+
+        // 回合开始
+        this.startRound(this.users[0])
     }
 
     // 用户敞开获取手牌的逻辑
@@ -51,10 +57,23 @@ export class Room {
         })
     }
 
+    // 回合开始
+    startRound (user: RoomUser){
+        // 首先默认第一个用户开始
+        this.setActiveUserId(user.id);
+        // 抽一个卡
+        user.drawCard();
+    }
+
+    // 设置当前行动用户
+    setActiveUserId (id: string){
+        this.activeUserId = id;
+    }
+
     // 创建用户
     createRoomUser (webSocket: WebSocket, json: any): RoomUser{
         const userId = json.userId;
-        const user = new RoomUser(webSocket,userId)
+        const user = new RoomUser(webSocket,userId, this)
         // 注入卡池
         user.setCards(json.cards);
         return user;
@@ -70,7 +89,7 @@ export class Room {
         roomuser.send({ message: "已经加入成功", to: json.mesCode });
 
         // 如果用户超出2位的时候 开始游戏
-        if( this.users.length == 1 ){
+        if( this.users.length == 2 ){
             // 开始游戏
             this.start()
         }
@@ -111,13 +130,30 @@ export class Room {
         return this.users.find((user: RoomUser)=>{ return user.id === id })
     }
 
-    setCards (cardIds: Array<string>, userId: string){
-        let card;
-        cardIds.forEach((cardId)=>{
-            card = objs.get(cardId);
-            if( card ){
-                this.cards.push(new card({userId: userId}));
-            }
+    // setCards (cardIds: Array<string>, userId: string){
+    //     let card;
+    //     cardIds.forEach((cardId)=>{
+    //         card = objs.get(cardId);
+    //         if( card ){
+    //             this.cards.push(new card({userId: userId}));
+    //         }
+    //     })
+    // }
+
+    // 用户使用卡
+    userUseCard (userId: string, dataJson: any){
+        // 锁定当前用户
+        const user = this.getUserById(userId);
+        // 让用户使用这张卡
+        if( user ){
+            user.useCard(dataJson.cardsCode)
+        }
+    }
+
+    // 连锁搜索
+    chain(type: string){
+        this.users.forEach((user: RoomUser)=>{
+            user.chain(type);
         })
     }
 
@@ -127,6 +163,9 @@ export class Room {
  * 房间中的用户
  */
 export class RoomUser {
+
+    // 当前房间
+    public Room: Room;
 
     // 用户的webSocket
     public WebSocket: WebSocket;
@@ -143,7 +182,14 @@ export class RoomUser {
     // 手牌
     public headerCards: Array<any> = [];
 
-    constructor (WebSocket: WebSocket, id: string){
+    // 场地
+    public spaceCards: Array<any> = [];
+
+    // 后场
+    public coverCards: Array<any> = [];
+
+    constructor (WebSocket: WebSocket, id: string, room: Room){
+        this.Room = room;
         this.WebSocket = WebSocket;
         this.id = id;
         // 所有卡的信息
@@ -171,7 +217,7 @@ export class RoomUser {
         // 将数组id转化为对应对象
         this.cards = cardsId.map((e)=>{ 
             i = objs.get(e);
-            return i ? new i({ user: this.id }) : null;
+            return i ? new i(this, this.Room) : null;
         });
     }
 
@@ -191,10 +237,39 @@ export class RoomUser {
     addHeaderCards (card: any){
         // 添加这手牌中的
         this.headerCards.push(card);
-
         // 抽卡
         this.send({ to: "sendAddHeaderCard", cardsId: card.id, cardsCode: card.code })
     }
+
+    // 使用卡
+    useCard (cardCode: string){
+        // 获取当前卡的实体对象
+        const card = this.getCardByCode(cardCode);
+        // 执行卡对象
+        card.run()
+    }
+
+    // 根据code获取实体
+    getCardByCode (cardCode: string){
+        let card = this.cards.find((e)=>{ return e.code == cardCode });
+        // card || (card = this.cemeteryCards.find((e)=>{ return e.cemeteryCards == cardCode }))
+        return card;
+    }
+
+    // 召唤 
+    summon (card: Card){
+        // 告知前台渲染
+        this.send({ to: "sendSummon", cardsId: card.id, cardsCode: card.code });
+    }
+
+    chain (type: string){
+        this.cards.forEach((card: Card)=>{ card.chain(type); })
+        this.cemeteryCards.forEach((card: Card)=>{ card.chain(type); })
+        this.headerCards.forEach((card: Card)=>{ card.chain(type); })
+        this.spaceCards.forEach((card: Card)=>{ card.chain(type); })
+        this.coverCards.forEach((card: Card)=>{ card.chain(type); })
+    }
+
 }
 
 
@@ -242,10 +317,22 @@ export class RoomWebSocket {
                     case "createUser": this.createUser(); break;
                     // 获取房间列表
                     case "getRooms" : this.getRooms(); break;
+                    // 使用卡
+                    case "useCard" : this.useCard(dataString); break;
                 }
             })
         });
 
+    }
+
+    // 使用卡
+    useCard (dataJson: any){
+        // 获取当前房间号
+        const room = this.getRoomById(dataJson.roomId);
+        if( room ){
+            // 那个用户使用了什么手牌
+            room.userUseCard(dataJson.userId, dataJson);
+        }
     }
 
     // 用户获取手牌信息
