@@ -87,7 +87,6 @@ export class Room {
         })
     }
 
-
     // 处理触发卡组的连锁
     createChain (cards: Array<Array<Card>>, index: number = 0){
 
