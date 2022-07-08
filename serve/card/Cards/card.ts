@@ -1,4 +1,5 @@
 import { Player } from "../Player";
+import { Room } from "../Room";
 import { Chaoliumeihai } from "./1";
 
 export class Card {
@@ -19,8 +20,21 @@ export class Card {
     }
 
     // 回合开始的时候触发
-    isBeforeTime (){
-        return true
+    isBeforeTime (room: Room){
+        return false;
+    }
+
+    // 回合开始的时候触发
+    isAfterTime (room: Room){
+        return false;
+    }
+
+    isBeforeUse (room: Room){
+        return false;
+    }
+
+    isAfterUse (room: Room){
+        return false;
     }
 
     // 使用卡

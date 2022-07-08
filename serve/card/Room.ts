@@ -43,10 +43,21 @@ export class Room {
         })
     }
 
+    start (player: Player){
+        this.startTime(player).then(()=>{
+            // 结束之后 切换成另一个来重复开始回合
+            const newplayer = this.players.find((e)=>{ return e !== player });
+            if( newplayer ){
+                // 递归开始
+                this.startTime(newplayer);
+            }
+        })
+    }
+
     // 谁的回合
     startTime (player: Player){
         
-        return new Promise(()=>{
+        return new Promise<void>((resolve)=>{
 
             // 首先判断玩家是否需要触发回合开始前的卡
             this.timeBeforeCards().then(()=>{
@@ -54,12 +65,32 @@ export class Room {
                 // 首先抽个卡
                 player.drawCard().then(()=>{
                     
+                    // 首先判断玩家是否需要触发回合开始前的卡
+                    this.timeAfterCards().then(()=>{
+
+                        // 等待操作
+                        this.waitOpt(player).then(()=>{
+
+                            // 操作完毕的话就执行回合结束
+                            resolve();
+
+                        });
+
+                    })
+
                 })
 
             });
             
         })
 
+    }
+
+    // 等待操作
+    waitOpt (player: Player){
+        return new Promise((resolve)=>{
+            
+        })
     }
 
     // 回合开始前处理
@@ -69,8 +100,26 @@ export class Room {
             // 首先检查一下双方玩家的所有卡牌  有没有要对现在的情况做处理的
             const player1 = this.players[0]; 
             const player2 = this.players[1];
-            const cards1 = player1.getAllCards().filter((card)=>{ return card.isBeforeTime() });
-            const cards2 = player2.getAllCards().filter((card)=>{ return card.isBeforeTime() });
+            const cards1 = player1.getAllCards().filter((card)=>{ return card.isBeforeTime(this) });
+            const cards2 = player2.getAllCards().filter((card)=>{ return card.isBeforeTime(this) });
+            
+            // 创建连锁
+            this.createChain([cards1, cards2]).then(()=>{
+                resolve();
+            });
+
+        })
+    }
+
+    // 回合开始抽卡后处理
+    timeAfterCards (){
+        return new Promise<void>((resolve)=>{
+
+            // 首先检查一下双方玩家的所有卡牌  有没有要对现在的情况做处理的
+            const player1 = this.players[0]; 
+            const player2 = this.players[1];
+            const cards1 = player1.getAllCards().filter((card)=>{ return card.isAfterTime(this) });
+            const cards2 = player2.getAllCards().filter((card)=>{ return card.isAfterTime(this) });
             
             // 创建连锁
             this.createChain([cards1, cards2]).then(()=>{
@@ -82,8 +131,41 @@ export class Room {
 
     useCard (card: Card){
         return new Promise<void>((resolve)=>{
+            this.useCardBefore()
             // 使用卡牌之前
             card.use();
+        })
+    }
+
+    // 在使用卡牌之前
+    useCardBefore (){
+        return new Promise<void>((resolve)=>{
+            // 首先检查一下双方玩家的所有卡牌  有没有要对现在的情况做处理的
+            const player1 = this.players[0]; 
+            const player2 = this.players[1];
+            const cards1 = player1.getAllCards().filter((card)=>{ return card.isBeforeUse(this) });
+            const cards2 = player2.getAllCards().filter((card)=>{ return card.isBeforeUse(this) });
+            
+            // 创建连锁
+            this.createChain([cards1, cards2]).then(()=>{
+                resolve();
+            });
+        })
+    }
+
+    // 在使用卡牌之前
+    useCardAfter (){
+        return new Promise<void>((resolve)=>{
+            // 首先检查一下双方玩家的所有卡牌  有没有要对现在的情况做处理的
+            const player1 = this.players[0]; 
+            const player2 = this.players[1];
+            const cards1 = player1.getAllCards().filter((card)=>{ return card.isAfterUse(this) });
+            const cards2 = player2.getAllCards().filter((card)=>{ return card.isAfterUse(this) });
+            
+            // 创建连锁
+            this.createChain([cards1, cards2]).then(()=>{
+                resolve();
+            });
         })
     }
 
@@ -210,7 +292,8 @@ export const test = function(){
         // 首先全员发送手牌
         room.getHandCard().then(()=>{
             // 全员发手牌之后  进入到连锁
-            room.startTime(player1);
+            // 开始谁的回合
+            room.startTime(player1)
         })
     });
 
