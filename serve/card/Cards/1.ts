@@ -1,5 +1,5 @@
 import { Player } from "../Player";
-import { Room } from "../Room";
+import { CardsRoom } from "../Room";
 import { Card } from "./card";
 
 export class Chaoliumeihai extends Card {
@@ -13,13 +13,13 @@ export class Chaoliumeihai extends Card {
     }
 
     // 开始回合之前触发
-    public isBeforeTime (room: Room){
+    public isBeforeTime (room: CardsRoom){
         return false;
     }
 
     // 使用卡
     use (){
-        
+
     }
 
 }

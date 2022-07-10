@@ -1,11 +1,62 @@
 import { Player } from "./Player"
 import { Card } from "./Cards/card";
+import { Room } from "../webSocket/ws"
+import { WebSocket } from "ws"
+
 
 // 房间内的用户
-export class Room {
+export class CardsRoom extends Room {
 
     // 用户成员
     public players: Array<Player> = [];
+
+    // 构造函数
+    constructor (id: String){
+       super(id); 
+    }
+
+    // 接收到信息
+    toSend (dataJson: any, webSocket: WebSocket){
+        super.toSend(dataJson, webSocket);
+
+        return new Promise(()=>{
+            // 获取请求事件
+            let fnName = dataJson.fnName;
+            switch ( fnName ){
+                // 创建房间
+                case "createPlayer": this.createPlayer(dataJson, webSocket); break;
+            }
+        })
+    }
+
+    // 创建用户
+    createPlayer (dataJson: any, webSocket: WebSocket){
+        // 根据传入的用户id创建用户
+        if( dataJson.userId ){
+            let player = new Player(dataJson.userId, this, webSocket);
+            this.setPlayer(player);
+
+            // player.send({},dataJson.mesCode);
+
+            if( this.players.length == 2 ) {
+                this.startGame();
+            }
+        }
+    }
+
+    // 开始游戏
+    startGame (){
+        // 开始游戏
+        this.beginGame().then(()=>{
+            // 开始游戏数据加载完毕后
+            // 首先全员发送手牌
+            this.getHandCard().then(()=>{
+                // 全员发手牌之后  进入到连锁
+                // 开始谁的回合
+                this.startTime(this.players[0]);
+            })
+        });
+    }
 
     // 添加用户
     public setPlayer(player: Player){
@@ -36,7 +87,7 @@ export class Room {
                                 });
                             });
                         });
-                    }); 
+                    });
                 });
                 return;
             })
@@ -275,30 +326,32 @@ export class Room {
 
 export const test = function(){
 
-    // 创建一个房间
-    const room = new Room();
+    // // 创建一个房间
+    // const room = new CardsRoom();
 
-    // 创建2个玩家
-    const player1 = new Player();
-    const player2 = new Player();
+    // // 创建2个玩家
+    // const player1 = new Player();
+    // const player2 = new Player();
 
-    // 将玩家添加进入房间
-    room.setPlayer(player1);
-    room.setPlayer(player2);
+    // // 将玩家添加进入房间
+    // room.setPlayer(player1);
+    // room.setPlayer(player2);
 
-    // 开始游戏
-    room.beginGame().then(()=>{
-        // 开始游戏数据加载完毕后
-        // 首先全员发送手牌
-        room.getHandCard().then(()=>{
-            // 全员发手牌之后  进入到连锁
-            // 开始谁的回合
-            room.startTime(player1)
-        })
-    });
+    // // 开始游戏
+    // room.beginGame().then(()=>{
+    //     // 开始游戏数据加载完毕后
+    //     // 首先全员发送手牌
+    //     room.getHandCard().then(()=>{
+    //         // 全员发手牌之后  进入到连锁
+    //         // 开始谁的回合
+    //         room.startTime(player1)
+    //     })
+    // });
 
 }
 
-export const load = function(){
-    test();
+export const load = function(id: String){
+    // test();
+    // 创建模块房间
+    return new CardsRoom(id);
 }

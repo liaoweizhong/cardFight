@@ -38,7 +38,7 @@ class Caipan {
 
     createWs (){
         // 打开一个 web socket，设定websocket服务器地址和端口
-        var ws = new WebSocket("ws://127.0.0.1:2333");
+        var ws = new WebSocket("ws://127.0.0.1:233");
 
         //开启连接open后客户端处理方法
         ws.onopen = ()=> {
@@ -51,17 +51,18 @@ class Caipan {
         ws.onmessage = (evt) => { 
             console.log(evt.data);
 
-            const data = JSON.parse(evt.data)
+            const data = JSON.parse(evt.data);
+            const sendData = data.sendData;
 
             // 判断一下是否有code记录
-            if( ws.messageQueue[data.to] ){
-                ws.messageQueue[data.to](data);
-                delete ws.messageQueue[data.to];
+            if( ws.messageQueue[data.from] ){
+                ws.messageQueue[data.from](data);
+                delete ws.messageQueue[data.from];
             };
 
             // 过滤是否直接给与用户的
-            if( this.player && this.player[data.to] ){
-                this.player[data.to](data);
+            if( this.player && this.player[sendData.fnName] ){
+                this.player[sendData.fnName](data);
             }
         };
         

@@ -1,5 +1,9 @@
 import { Chaoliumeihai } from "./Cards/1";
 import { Card } from "./Cards/card";
+import { CardsRoom } from "./Room";
+import { WebSocket } from "ws"
+import { v4 as uuidv4 } from 'uuid';
+
 
 const Cards: Array<any> = [Chaoliumeihai];
 
@@ -23,6 +27,23 @@ export class Player {
 
     // 后场
     public afterCards: Array<Card> = [];
+
+    // 房间
+    public room: CardsRoom;
+
+    // 玩家的ws
+    public webSocket: WebSocket;
+
+    // 当前玩家id
+    public id: String = "";
+
+    constructor (id: String ,room: CardsRoom, webSocket: WebSocket){
+        this.id = id;
+        // 当前房间
+        this.room = room;
+        // 当前用户的
+        this.webSocket = webSocket;
+    }
 
     // 将卡牌加入到牌堆
     public addcards (card: Card){
@@ -56,18 +77,28 @@ export class Player {
             this.cards = this.cardsId.map((id)=>{
                 return new (this.getCardsById(id))(this);
             })
-            resolve();
+            // 请求前端渲染加载数据
+            this.send({ fnName: "loadInitCards" , cards: this.cards.map((e)=>{ return { id: e.id, xid: e.xid } }) }).then(()=>{
+                // 页面加载卡牌数据完毕后
+                resolve();
+            })
         })
     }
 
-    // 从墓地中抽卡
+    // 从卡组中抽卡
     public drawCard (){
         return new Promise<void>((resolve)=>{
             const cards = this.cards.shift();
             if( cards ){
                 this.handCards.push(cards);
+                // 传值抽卡
+                this.send({fnName: "drawCard", cardId: cards.id, xid: cards.xid}).then(()=>{
+                    // 客户端渲染成功后
+                    resolve();
+                });
+            }else {
+                resolve();
             }
-            resolve();
         })
     }
 
@@ -85,6 +116,33 @@ export class Player {
 
     public getCardsById (id: string){
         return Cards.find((card)=>card.id == id) || Cards[0];
+    }
+
+    public send (sendString: string | Object, fromCode?: string){
+        if (this.webSocket.readyState == 1) {
+            // 生成当前通信的唯一值
+            const code = uuidv4();
+            // sendObj
+            const sendObj = {
+                id: this.id,
+                code: code,
+                sendData: typeof sendString === "string" ? JSON.parse(sendString) : sendString,
+                from: fromCode
+            }
+            // 请求访问
+            this.webSocket.send(JSON.stringify(sendObj));
+            // 然后生成返回回调
+            return new Promise<void>((resolve)=>{
+                this.room.cacheResovle.push({
+                    "code": code,
+                    "resolve": resolve
+                })
+            })
+        }
+
+        return new Promise<void>((resolve)=>{
+            resolve()
+        })
     }
 
 }

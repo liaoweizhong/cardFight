@@ -1,6 +1,7 @@
 import { Player } from "../Player";
-import { Room } from "../Room";
+import { CardsRoom } from "../Room";
 import { Chaoliumeihai } from "./1";
+import { v4 as uuidv4 } from 'uuid';
 
 export class Card {
 
@@ -17,23 +18,24 @@ export class Card {
 
     constructor (player: Player){
         this.player = player;
+        this.xid = uuidv4();
     }
 
     // 回合开始的时候触发
-    isBeforeTime (room: Room){
+    isBeforeTime (room: CardsRoom){
         return false;
     }
 
     // 回合开始的时候触发
-    isAfterTime (room: Room){
+    isAfterTime (room: CardsRoom){
         return false;
     }
 
-    isBeforeUse (room: Room){
+    isBeforeUse (room: CardsRoom){
         return false;
     }
 
-    isAfterUse (room: Room){
+    isAfterUse (room: CardsRoom){
         return false;
     }
 

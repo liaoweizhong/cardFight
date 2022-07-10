@@ -19,7 +19,7 @@ export class server extends expressServer {
         const roomServer = new RoomWebSocket();
 
         // 加载卡牌战斗房间系统
-        load();
+        load("test");
 
     }
 

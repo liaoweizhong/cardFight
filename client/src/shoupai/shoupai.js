@@ -39,8 +39,6 @@ class Shoupai {
 
     setCard (card){
 
-        debugger;
-        
         // 创建dom
         const dom = this.createCardDom(card);
 
