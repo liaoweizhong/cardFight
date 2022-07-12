@@ -83,14 +83,12 @@ class Player {
     setShoupai (obj){
         this.headerObject = obj;
 
-        obj.use = (cards)=>{
-            this.userCard(cards)
-        }
+        obj.setPlayer(this);
     }
 
     // 使用卡牌的时候
     userCard (cards){
-        return this.ws.sendJson({ type: "useCards", userId: this.id, roomId: this.roomId, cardsCode: cards.code }).then((res)=>{
+        return this.ws.sendJson({ type: "sendUseCard", userId: this.id, roomId: this.roomId, xid: cards.xid }).then((res)=>{
             // this.cardLists = res.data.card;
             console.log("使用成功", res)
         });

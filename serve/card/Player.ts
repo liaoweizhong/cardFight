@@ -107,6 +107,12 @@ export class Player {
         return this.cards.concat(this.handCards).concat(this.cemeteryCards).concat(this.afterCards).concat(this.beforeCards);
     }
 
+    // 根据xid获取卡牌
+    public getCardsByXid (xid: String){
+        const cards = this.cards.concat(this.handCards).concat(this.cemeteryCards).concat(this.afterCards).concat(this.beforeCards);
+        return cards.find((e)=>{ return e.xid == xid });
+    }
+
     // 用户选择卡
     public selectCards (cards: Array<Card>){
         return new Promise<Card>((resolve)=>{
@@ -116,6 +122,18 @@ export class Player {
 
     public getCardsById (id: string){
         return Cards.find((card)=>card.id == id) || Cards[0];
+    }
+
+    // 使用卡 send调用的
+    public sendUseCard (data: any){
+        // 获取使用的卡id
+        const cardxid = data.sendData.xid;
+        // 从全部卡组中查询实体卡对象
+        const card = this.getCardsByXid(cardxid);
+        if( card ){
+            // 使用图片
+            this.room.useCard(card)
+        }
     }
 
     public send (sendString: string | Object, fromCode?: string){

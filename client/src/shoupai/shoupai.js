@@ -8,8 +8,10 @@ class Shoupai {
 
         this.setDom(dom);
 
-        this.use = function(){}
+    }
 
+    setPlayer (player){
+        this.player = player;
     }
 
     setDom (dom){
@@ -17,7 +19,6 @@ class Shoupai {
         this.dom.className += " shoupaiBox"
 
         this.dom.addEventListener("click",(e)=>{
-            debugger;
             var type = e.type;
             var dom = e.target;
             //对dom进行taggle调用
@@ -66,8 +67,7 @@ class Shoupai {
     }
 
     clickFn (dom){
-        debugger;
-        this.use(dom.card);
+        this.player.userCard(dom.card);
     }
 
 }
